@@ -1,0 +1,41 @@
+stages:
+- terraform_init
+- terraform_plan
+- terraform_destroy
+
+Terraform Initialization:
+  image: kthamel/terraform
+  stage: terraform_init
+  script:
+    - terraform init
+  tags:
+    - docker-runner-3
+  artifacts:
+    paths:
+      - .terraform/
+      - .terraform.lock.hcl
+
+Terraform Plan:
+  stage: terraform_plan
+  image: kthamel/terraform
+  before_script:
+    - export aws_access_key_id=$AWS_ACCESS_KEY_ID
+    - export aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
+  script:
+    - terraform plan
+  tags:
+    - docker-runner-3
+  dependencies:
+    - Terraform Initialization
+
+Terraform Destroy:
+  stage: terraform_destroy
+  image: kthamel/terraform
+  script:
+    - sleep 300
+    - terraform destroy -auto-approve
+  tags:
+    - docker-runner-3
+  dependencies:
+    - Terraform Initialization
+    - Terraform Plan
